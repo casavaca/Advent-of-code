@@ -23,20 +23,28 @@ using namespace std;
 .664.598..
 */
 
-bool adj(const vector<string>& v, int n, int i, int j)
+static map<int, map<int, vector<int>>> m;
+
+
+bool adj(const vector<string>& v, int n, int i, int j, int num)
 {
+    bool ret = false;
     assert (i>0 && i < v.size() - 1);
     assert (j>0 && j < v[0].size() - 1);
     for (int ii = n-1; ii<=n+1; ii++)
         for (int jj = i-1; jj <= j+1; jj++)
-            if (v[ii][jj] != '.' && !isdigit(v[ii][jj]))
-                return true;
-    return false;
+            if (v[ii][jj] != '.' && !isdigit(v[ii][jj])) {
+                ret = true;
+                if (v[ii][jj] == '*') {
+                    m[ii][jj].push_back(num);
+                }
+            }
+    return ret;
 }
 
 long long f(vector<string>& v)
 {
-    for (auto s:v) cout << s << '\n';
+    // for (auto s:v) cout << s << '\n';
 
     long long ret = 0;
     int m = v.size();
@@ -62,8 +70,8 @@ long long f(vector<string>& v)
                 }
             } else {
                 if (prev_is_num) {
-                    if (adj(v, i,num_begin, num_end)) {
-                        cout << local << '\n';
+                    if (adj(v, i,num_begin, num_end, local)) {
+                        // cout << local << '\n';
                         ret += local;
                     }
                 }
@@ -91,7 +99,16 @@ int main()
     }
     v.push_back(string(v.back().size(), '.'));
     ans1 = f(v);
-    cout << ans1 << '\n';
-    // cout << ans1 << ' ' << ans2 << '\n';
+
+    for (auto& mi : m) {
+        for (auto& mj : mi.second) {
+            if (mj.second.size() == 2) {
+                ans2 += mj.second[0] * mj.second[1];
+            }
+        }
+    }
+
+    // cout << ans1 << '\n';
+    cout << ans1 << ' ' << ans2 << '\n';
     return 0;
 }
