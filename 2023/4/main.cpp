@@ -31,15 +31,13 @@ long long f(const string& s) {
     while(ss>>tmp[0]) {
         if (tmp[0][0] == '|') {
             bar = true;
-            // for (auto i:winning) cout << i << ' ';
         } else {
             int num = std::stoi(tmp[0]);
             if (bar == false)
                 winning.insert(num);
             else {
                 if (winning.count(num)) {
-                    if (ans== 0) ans = 1;
-                    else ans *= 2; // TODO: check input for over flow
+                    ans++;
                 }
             }
         }
@@ -47,16 +45,37 @@ long long f(const string& s) {
     return ans;
 }
 
+static array<int, 220> num_copy;
+
 int main()
 {
     vector<string> v;
     string s;
     long long ans1=0;
     long long ans2=0;
+    int cnt = 0;
+    // 1-indexed;
+    map<int,int> m;
     while(getline(cin, s)) {
-        ans1 += f(s);
+        m[++cnt] = f(s);
+        if (m[cnt]) {
+            ans1 += (1<<(m[cnt] - 1));
+        }
     }
-    cout << ans1 << '\n';
-    // cout << ans1 << ' ' << ans2 << '\n';
+
+    num_copy.fill(1);
+
+    for (auto& p:m) {
+        int mul = num_copy[p.first];
+        for (int i=1; i<=p.second; i++) {
+            num_copy[p.first + i] += mul;
+        }
+    }
+
+    for (auto& p:m) {
+        ans2 += num_copy[p.first];
+    }
+
+    cout << ans1 << ' ' << ans2 << '\n';
     return 0;
 }
