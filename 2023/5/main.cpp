@@ -1,17 +1,78 @@
 //usr/bin/c++ -g -std=c++17 -o ${o=`mktemp`} "$0" && "$o" "$@"; ret=$?; rm "$o"; exit $s
 
-#include "../template/header.hpp"
-
-#include <algorithm>
+#include <deque>
+#include <functional>
 #include <iostream>
-#include <string>
+#include <map>
 #include <set>
 #include <sstream>
+#include <string>
 #include <vector>
-#include <regex>
+#include <limits>
+
 #include <cassert>
 
 using namespace std;
+
+// common io function
+
+////////////////////////////////////////////////////////////////////////////////
+// INPUT
+////////////////////////////////////////////////////////////////////////////////
+
+// cin >> tuple<T...>
+template <typename... T>
+istream& operator>>(istream& is, tuple<T...>& t)
+{
+    apply([&is](auto&... args) { (is >> ... >> args); }, t);
+    return is;
+}
+
+// cin >> pair<T1, T2>
+template <typename T1, typename T2>
+istream& operator>>(istream& is, pair<T1, T2>& p)
+{
+    is >> p.first >> p.second;
+    return is;
+}
+
+// cin >> vector<T>
+template <typename T>
+istream& operator>>(istream& is, vector<T>& vec)
+{
+    for (T& x : vec)
+        is >> x;
+    return is;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// OUTPUT
+////////////////////////////////////////////////////////////////////////////////
+
+// cout << tuple<T...>
+template <typename... T>
+ostream& operator<<(ostream& os, const tuple<T...>& t)
+{
+    apply([&os](const auto&... args) { (os << ... << args); }, t);
+    return os;
+}
+
+// cout << pair<T1, T2>
+template <typename T1, typename T2>
+ostream& operator<<(ostream& os, const pair<T1, T2>& p)
+{
+    os << p.first << " " << p.second;
+    return os;
+}
+
+// cout << vector<T>
+template <typename T>
+ostream& operator<<(ostream& os, const vector<T>& vec)
+{
+    for (const T& x : vec)
+        os << x << " ";
+    return os;
+}
 
 typedef pair<long long, long long> R;
 
