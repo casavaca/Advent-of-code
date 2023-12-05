@@ -1,4 +1,6 @@
-//usr/bin/c++ -g -std=c++20 -o ${o=`mktemp`} "$0" && "$o" "$@"; ret=$?; rm "$o"; exit $s
+//usr/bin/c++ -g -std=c++17 -o ${o=`mktemp`} "$0" && "$o" "$@"; ret=$?; rm "$o"; exit $s
+
+#include "../template/header.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -6,26 +8,33 @@
 #include <set>
 #include <sstream>
 #include <vector>
-#include <ranges>
 #include <regex>
 #include <cassert>
 
 using namespace std;
 
-vector<long long> parse_seed(const string& s) {
-    vector<long long> ret;
+typedef pair<long long, long long> R;
+
+vector<R> parse_seed2(const string& s) {
+    vector<R> ret;
     stringstream ss;
     ss<<s;
     string tmp;
     ss>>tmp;
-    while(ss>>tmp) {
-        try {
-            ret.push_back(std::stoll(tmp));
-        } catch (...) {
-            std::cout << "debug---" << tmp << "\n";
-            exit(1);
-        }
-    }
+    R r;
+    while(ss>>r) { ret.push_back(r); }
+    return ret;
+}
+
+vector<R> parse_seed1(const string& s) {
+    vector<R> ret;
+    stringstream ss;
+    ss<<s;
+    string tmp;
+    ss>>tmp;
+    R r;
+    r.second = 1;
+    while(ss>>r.first) { ret.push_back(r); }
     return ret;
 }
 
@@ -41,24 +50,82 @@ void gen_map(const vector<string> &v, long long cnt) {
     }
 }
 
-long long step(long long s, map<long long, pair<long long, long long>>& m)
+vector<R> step(R s, map<long long, pair<long long, long long>>& m)
 {
-    for (auto & p:m) {
-        long long src_start = p.first;
-        long long len = p.second.second;
-        long long dest = p.second.first;
-        if (s >= src_start && s < src_start + len) {
-            return dest + (s - src_start);
+    vector<R> ret;
+    if (m.empty()) {
+        return {s};
+    }
+    while(s.second != 0) {
+        for (auto & p:m) {
+            // long long src_start = p.first;
+            // long long len = p.second.second;
+            // long long dest = p.second.first;
+            auto it = m.lower_bound(s.first);
+            if (it != m.begin()) {
+                it--;
+                long long it_src = it->first;
+                long long it_len = it->second.second;
+                long long it_dest = it->second.first;
+                long long len = it_src + it_len - s.first;
+                if (len > 0) {
+                    len = min(len, s.second);
+                    assert(s.first > it_src);
+                    ret.emplace_back(it_dest + s.first - it_src, len);
+                    assert(len);
+                    s.first += len;
+                    s.second -= len;
+                }
+                it++;
+            }
+            if (s.second == 0)
+                break;
+            if (it != m.end() && it->first > s.first) {
+                long long len = it->first - s.first;
+                long long it_src = it->first;
+                long long it_len = it->second.second;
+                long long it_dest = it->second.first;
+                len = min(len, s.second);
+                ret.emplace_back(s.first, len);
+                assert(len);
+                s.first += len;
+                s.second -= len;
+            }
+            if (s.second == 0)
+                break;
+            while(it != m.end() && s.second > 0) {
+                long long it_src = it->first;
+                long long it_len = it->second.second;
+                long long it_dest = it->second.first;
+                long long len = min(s.second, it->second.second);
+                ret.emplace_back(it->second.first, len);
+                s.first += len;
+                s.second -= len;
+                it++;
+            }
+            if (s.second == 0)
+                break;
+            ret.push_back(s);
+            s.second = 0;
         }
     }
-    return s;
+    return ret;
 }
-long long gen_ans1(long long s)
+
+vector<R> gen_ans2(R s)
 {
-    for (long long i=0; i<10; i++) {
-        s = step(s, g_m[i]);
+    vector<R> mut = {s};
+    for (int i=0; i<10; i++) {
+        // cout << "debug layer " << i << " is -- " << mut << "\n";
+        vector<R> next;
+        for (auto r:mut) {
+            vector<R> tmp = step(r, g_m[i]);
+            next.insert(next.end(), tmp.begin(), tmp.end());
+        }
+        // cout << "debug" << next << "\n";
+        mut = std::move(next);
     }
-    return s;
+    return mut;
 }
 
 int main()
@@ -72,7 +139,8 @@ int main()
     // 1-indexed;
     map<long long,long long> m;
     getline(cin, seed_str);
-    vector<long long> seeds = parse_seed(seed_str);
+    vector<R> seeds1 = parse_seed1(seed_str);
+    vector<R> seeds2 = parse_seed2(seed_str);
 
     getline(cin, s);
     getline(cin, s);
@@ -93,20 +161,50 @@ int main()
     v.clear();
     assert (cnt == 7);
 
-    for (long long i=0; i<10; i++)
-    for (auto& p:g_m[i]) {
-        cout << p.second.first << ' ' << p.first << ' ' << p.second.second << '\n';
+    // for (long long i=0; i<10; i++)
+    // for (auto& p:g_m[i]) {
+    //     cout << p.second.first << ' ' << p.first << ' ' << p.second.second << '\n';
+    // }
+
+    vector<R> locations;
+    for (auto s:seeds1) {
+        // cout << "debug seed is -- " << s << "\n";
+        vector<R> new_loc = gen_ans2(s);
+        long long dbg = std::numeric_limits<long long>::max();
+        for (auto s:new_loc) {
+            dbg = min(dbg, s.first);
+        }
+        // cout << "debug-- " << dbg << "\n";
+
+        locations.insert(locations.end(), new_loc.begin(), new_loc.end());
+    }
+    ans1 = std::numeric_limits<long long>::max();
+    for (auto s:locations) {
+        ans1 = min(ans1, s.first);
     }
 
-    vector<long long> locations;
-    for (auto s:seeds) {
-        locations.push_back(gen_ans1(s));
+    for (auto s:seeds2) {
+        // cout << "debug seed is -- " << s << "\n";
+        vector<R> new_loc = gen_ans2(s);
+        long long dbg = std::numeric_limits<long long>::max();
+        for (auto s:new_loc) {
+            dbg = min(dbg, s.first);
+        }
+        // cout << "debug-- " << dbg << "\n";
+
+        locations.insert(locations.end(), new_loc.begin(), new_loc.end());
+    }
+    ans2 = std::numeric_limits<long long>::max();
+    for (auto s:locations) {
+        ans2 = min(ans2, s.first);
     }
 
+    // cout << locations;
     
-    cout << "ans is \n";
-    cout << *min_element(locations.begin(), locations.end()) << '\n';
-    // cout << ans1 << ' ' << ans2 << '\n';
+    // cout << "ans is \n";
+    // cout << *min_element(locations.begin(), locations.end()) << '\n';
+    cout << ans1 << ' ' << ans2 << '\n';
+
     return 0;
 }
 
