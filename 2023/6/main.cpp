@@ -1,7 +1,9 @@
 //usr/bin/c++ -g -std=c++17 -o ${o=`mktemp`} "$0" && "$o" "$@"; ret=$?; rm "$o"; exit $s
 
-#include "../template/header.hpp"
-#include <functional>
+#include <numeric>
+#include <iostream>
+#include <vector>
+using namespace std;
 
 long long f(long long tt, long long dd)
 {
