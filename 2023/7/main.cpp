@@ -101,21 +101,20 @@ bool lt1(const Card& lhs, const Card& rhs) {
     CardType r = get_type(rhs);
     if (l<r) return true;
     if (l>r) return false;
-    static char ww[128];
-    {
-        ww['2'] = 2;
-        ww['3'] = 3;
-        ww['4'] = 4;
-        ww['5'] = 5;
-        ww['6'] = 6;
-        ww['7'] = 7;
-        ww['8'] = 8;
-        ww['9'] = 9;
-        ww['T'] = 10;
-        ww['J'] = 11;
-        ww['Q'] = 12;
-        ww['K'] = 13;
-        ww['A'] = 14;
+    static char ww[128] = {
+        ['2'] = 2,
+        ['3'] = 3,
+        ['4'] = 4,
+        ['5'] = 5,
+        ['6'] = 6,
+        ['7'] = 7,
+        ['8'] = 8,
+        ['9'] = 9,
+        ['T'] = 10,
+        ['J'] = 11,
+        ['Q'] = 12,
+        ['K'] = 13,
+        ['A'] = 14,
     };
     for (int i=0; i<5; i++) {
         if (ww[lhs.hands[i]] < ww[rhs.hands[i]]) return true;
@@ -129,21 +128,20 @@ bool lt2(const Card& lhs, const Card& rhs) {
     CardType r = get_type_with_joker(rhs);
     if (l<r) return true;
     if (l>r) return false;
-    static char ww[128];
-    {
-        ww['J'] = 1;
-        ww['2'] = 2;
-        ww['3'] = 3;
-        ww['4'] = 4;
-        ww['5'] = 5;
-        ww['6'] = 6;
-        ww['7'] = 7;
-        ww['8'] = 8;
-        ww['9'] = 9;
-        ww['T'] = 10;
-        ww['Q'] = 12;
-        ww['K'] = 13;
-        ww['A'] = 14;
+    static char ww[128] = {
+        ['J'] = 1,
+        ['2'] = 2,
+        ['3'] = 3,
+        ['4'] = 4,
+        ['5'] = 5,
+        ['6'] = 6,
+        ['7'] = 7,
+        ['8'] = 8,
+        ['9'] = 9,
+        ['T'] = 10,
+        ['Q'] = 12,
+        ['K'] = 13,
+        ['A'] = 14,
     };
     for (int i=0; i<5; i++) {
         if (ww[lhs.hands[i]] < ww[rhs.hands[i]]) return true;
