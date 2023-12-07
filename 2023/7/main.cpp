@@ -60,8 +60,40 @@ CardType get_type(const Card& card)
     assert(false);
 }
 
+CardType get_type_with_joker(const Card& card)
+{
+    map<char, int> m;
+    for (auto c:card.hands) m[c]++;
+    if (m.count('J') == 0)
+        return get_type(card);
+    int n_J = m['J'];
+    assert(n_J);
+    if (n_J == 5) return FIVE_OF_A_KIND;
+    m.erase('J');
+    Card copy = card;
+    auto p = m.begin();
+    auto m_p = p;
+    auto m_v = p->second;
+    ++p;
+    while(p != m.end()) {
+        if (p->second > m_v) {
+            m_v = p->second;
+            m_p = p;
+        }
+        ++p;
+    }
+    int cnt = 0;
+    for (int i=0; i<n_J; i++)
+        copy.hands[cnt++] = m_p->first;
+    for (auto p :m) {
+        for (int i=0; i<p.second; i++)
+            copy.hands[cnt++] = p.first;
+    }
+    assert(cnt==5);
+    return get_type(copy);
+}
 
-bool operator<(const Card& lhs, const Card& rhs) {
+bool lt1(const Card& lhs, const Card& rhs) {
     CardType l = get_type(lhs);
     CardType r = get_type(rhs);
     if (l<r) return true;
@@ -89,6 +121,34 @@ bool operator<(const Card& lhs, const Card& rhs) {
     return true;
 }
 
+bool lt2(const Card& lhs, const Card& rhs) {
+    CardType l = get_type_with_joker(lhs);
+    CardType r = get_type_with_joker(rhs);
+    if (l<r) return true;
+    if (l>r) return false;
+    static char ww[128];
+    {
+        ww['J'] = 1;
+        ww['2'] = 2;
+        ww['3'] = 3;
+        ww['4'] = 4;
+        ww['5'] = 5;
+        ww['6'] = 6;
+        ww['7'] = 7;
+        ww['8'] = 8;
+        ww['9'] = 9;
+        ww['T'] = 10;
+        ww['Q'] = 12;
+        ww['K'] = 13;
+        ww['A'] = 14;
+    };
+    for (int i=0; i<5; i++) {
+        if (ww[lhs.hands[i]] < ww[rhs.hands[i]]) return true;
+        if (ww[lhs.hands[i]] > ww[rhs.hands[i]]) return false;
+    }
+    return true;
+}
+
 
 int main()
 {
@@ -98,12 +158,14 @@ int main()
         vc.push_back(c);
     }
 
-    // cout << vc << '\n';
-    sort(vc.begin(), vc.end());
-    // cout << vc << '\n';
-
+    sort(vc.begin(), vc.end(), lt1);
     for (int i=0; i<vc.size(); i++) {
         ans1 += vc[i].weight * (i+1);
+    }
+
+    sort(vc.begin(), vc.end(), lt2);
+    for (int i=0; i<vc.size(); i++) {
+        ans2 += vc[i].weight * (i+1);
     }
 
     cout << ans1 << ' ' << ans2 << '\n';
