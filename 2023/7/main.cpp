@@ -3,7 +3,10 @@
 #include <numeric>
 #include <iostream>
 #include <vector>
-#include "../template/header.hpp"
+#include <array>
+#include <algorithm>
+#include <map>
+#include <cassert>
 
 using namespace std;
 
