@@ -16,12 +16,25 @@ long long ans2;
 
 typedef std::array<std::string, 2> TT;
 
-long long f(map<string, TT>& v, string inst)
+long long f(map<string, TT>& v, string inst, string start)
 {
     auto ptr = inst.begin();
     long long cnt = 0;
-    string start = "AAA"; // set manually
     while(start != "ZZZ") {
+        cnt++;
+        start = (*ptr) == 'L' ? v[start][0] : v[start][1];
+        ptr++;
+        if (ptr==inst.end())
+            ptr = inst.begin();
+    }
+    return cnt;
+}
+
+long long g(map<string, TT>& v, string inst, string start)
+{
+    auto ptr = inst.begin();
+    long long cnt = 0;
+    while(start[2] != 'Z') {
         cnt++;
         start = (*ptr) == 'L' ? v[start][0] : v[start][1];
         ptr++;
@@ -44,8 +57,17 @@ int main()
         v[key] = tmp;
     }
 
-    // cout << v;
-    ans1 = f(v, inst);
+    ans1 = f(v, inst, "AAA");
+
+    vector<long long> steps;
+    for (auto & e:v) {
+        if (e.first[2] == 'A') {
+            long long tmp = g(v,inst,e.first);
+            steps.push_back(tmp);
+        }
+    }
+
+    ans2 = std::reduce(steps.begin(), steps.end(), 1ll, std::lcm<long long,long long>);
 
     cout << ans1 << ' ' << ans2 << '\n';
     return 0;
