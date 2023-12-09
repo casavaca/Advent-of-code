@@ -16,23 +16,24 @@ long long ans2;
 
 typedef std::array<std::string, 2> TT;
 
-long long donumbers(vector<int>& v)
+pair<long long, long long> donumbers(vector<int>& v)
 {
     assert(v.size());
     if (v.size() == 1) {
         assert(false);
-        return v[0];
+        return {v[0], v[0]};
     }
     // if all is zero
     if (std::all_of(v.begin(), v.end(), [](int x) { return x == 0; })) {
-        return 0;
+        return {0,0};
     }
     vector<int> diff(v.size()-1);
     for (auto i=1u; i<v.size() ;i++) diff[i-1] = v[i] - v[i-1];
-    return v.back() + donumbers(diff);
+    auto last_level = donumbers(diff);
+    return {v.front() - last_level.first, v.back() + last_level.second};
 }
 
-long long doline(string line)
+pair<long long, long long> doline(string line)
 {
     // convert line into vector<int>
     vector<int> vec;
@@ -42,7 +43,6 @@ long long doline(string line)
         vec.push_back(a);
     }
     return donumbers(vec);
-    return 0;
 }
 
 
@@ -50,7 +50,9 @@ int main()
 {
     string line;
     while(getline(cin, line)) {
-        ans1 += doline(line);
+        auto tmp = doline(line);
+        ans1 += tmp.first;
+        ans2 += tmp.second;
     }
 
     cout << ans1 << ' ' << ans2 << '\n';
