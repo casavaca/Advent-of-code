@@ -40,7 +40,7 @@ static inline int V(int i, int j)
     return g_in[i][j] - '0';
 }
 
-long long f(void) // use g_in
+long long f(int which_part) // use g_in
 {
     int n_row = g_in.size();
     int n_col = g_in[0].size();
@@ -56,20 +56,22 @@ long long f(void) // use g_in
             cache[s] = s.ans;
 
             deque<S> potential_next;
-            switch (s.d) {
-            case L:
-            case R:
-                potential_next.push_back({s.i-1, s.j, 1, U,s.ans + V(s.i-1,s.j)});
-                potential_next.push_back({s.i+1, s.j, 1, D,s.ans + V(s.i+1,s.j)});
-                break;
-            case U:
-            case D:
-                potential_next.push_back({s.i, s.j+1, 1, R, s.ans + V(s.i, s.j+1)});
-                potential_next.push_back({s.i, s.j-1, 1, L, s.ans + V(s.i, s.j-1)});
-                break;
-            default: assert(false);
+            if (s.hist >= 4) {
+                switch (s.d) {
+                case L:
+                case R:
+                    potential_next.push_back({s.i-1, s.j, 1, U,s.ans + V(s.i-1,s.j)});
+                    potential_next.push_back({s.i+1, s.j, 1, D,s.ans + V(s.i+1,s.j)});
+                    break;
+                case U:
+                case D:
+                    potential_next.push_back({s.i, s.j+1, 1, R, s.ans + V(s.i, s.j+1)});
+                    potential_next.push_back({s.i, s.j-1, 1, L, s.ans + V(s.i, s.j-1)});
+                    break;
+                default: assert(false);
+                }
             }
-            if (s.hist < 3) {
+            if (s.hist < 10) {
                 switch(s.d) {
                 case U: potential_next.push_back({s.i-1, s.j, s.hist+1, s.d, s.ans + V(s.i-1, s.j)}); break;
                 case R: potential_next.push_back({s.i, s.j+1, s.hist+1, s.d, s.ans + V(s.i, s.j+1)}); break;
@@ -85,32 +87,40 @@ long long f(void) // use g_in
         q = std::move(next);
     }
     long long ans = numeric_limits<long long>::max();
-
-    vector<S> haha = {
-        {n_row-1, n_col-1, 1, D, 0},
-        {n_row-1, n_col-1, 2, D, 0},
-        {n_row-1, n_col-1, 3, D, 0},
-        {n_row-1, n_col-1, 1, U, 0},
-        {n_row-1, n_col-1, 2, U, 0},
-        {n_row-1, n_col-1, 3, U, 0},
-        {n_row-1, n_col-1, 1, L, 0},
-        {n_row-1, n_col-1, 2, L, 0},
-        {n_row-1, n_col-1, 3, L, 0},
-        {n_row-1, n_col-1, 1, R, 0},
-        {n_row-1, n_col-1, 2, R, 0},
-        {n_row-1, n_col-1, 3, R, 0},
-    };
-    for (auto& s:haha)
-        if (cache.count(s) > 0)
-            ans = min(ans, cache[s]);
+    direction directions[] = {U,D,R,L};
+    vector<S> haha;
+    if (which_part == 1) {
+        haha = {
+            {n_row-1, n_col-1, 1, D, 0},
+            {n_row-1, n_col-1, 2, D, 0},
+            {n_row-1, n_col-1, 3, D, 0},
+        };
+    } else {
+        haha = {
+            {n_row-1, n_col-1, 4, D, 0},
+            {n_row-1, n_col-1, 5, D, 0},
+            {n_row-1, n_col-1, 6, D, 0},
+            {n_row-1, n_col-1, 7, D, 0},
+            {n_row-1, n_col-1, 8, D, 0},
+            {n_row-1, n_col-1, 9, D, 0},
+            {n_row-1, n_col-1, 10,D, 0},
+        };
+    }
+    for (int i=0; i<4; i++) {
+        for (auto& s:haha) {
+            s.d = directions[i];
+            if (cache.count(s) > 0)
+                ans = min(ans, cache[s]);
+        }
+    }
     return ans;
 }
 
 int main()
 {
     g_in = read_matrix(cin);
-    ans1 = f();
-
+    ans1 = f(1);
+    ans2 = f(2);
 
     cout << ans1 << ' ' << ans2 << '\n';
     return 0;
