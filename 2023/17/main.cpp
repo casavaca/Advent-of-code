@@ -13,10 +13,20 @@
 #include <cstring>
 #include <cassert>
 
-#include "../template/header.hpp"
+using namespace std;
 
 long long ans1;
 long long ans2;
+
+vector<string> read_matrix(istream& is)
+{
+    vector<string> vec;
+    string line;
+    while (getline(is, line)) {
+        vec.push_back(line);
+    }
+    return vec;
+}
 
 vector<string> g_in;
 enum direction {U, R, D, L};
