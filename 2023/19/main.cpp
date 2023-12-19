@@ -47,9 +47,17 @@ ostream& operator<<(ostream& os, const Rule& r)
     return os;
 }
 
+ostream& operator<<(ostream& os, const SubRule& sr)
+{
+    os << "  " << sr.always << ' ' << sr.name << ' ' << sr.op << ' ' << sr.val << ' ' << sr.dest_is_final << ' ' << sr.dest << ' ' << sr.accept << '\n';
+    return os;
+}
+
 struct Item {
     array<int,4> val; // x m a s
 };
+
+typedef tuple<std::string, array<array<int, 2>, 4>> CacheItem;
 
 variant<bool, string> step(const Rule& r,const Item& i)
 {
@@ -169,9 +177,116 @@ long long f()
     return ret;
 }
 
+map<CacheItem, long long> g_cache;
+
+long long doit(string name, array<array<int, 2>, 4> boundaries, int start_rule, bool expect_all_match = false)
+{
+    if (start_rule == 0) {
+        if (g_cache.count({name, boundaries}))
+            return g_cache.at({name, boundaries});
+    }
+
+    long long ret = 0;
+
+    auto sr = g_rules[name].subrules.at(start_rule);
+    {
+        int index = -1;
+        if (!sr.always) {
+            switch (sr.name) {
+            case 'x': index = 0; break;
+            case 'm': index = 1; break;
+            case 'a': index = 2; break;
+            case 's': index = 3; break;
+            default: assert(false);
+            }
+        }
+
+        bool all_match = sr.always;
+        if (!all_match) {
+            if (sr.op == '>') {
+                all_match = ((boundaries[index][0] > sr.val) || (boundaries[index][1] <= sr.val));
+            } else if (sr.op == '<') {
+                all_match = ((boundaries[index][1] < sr.val) || (boundaries[index][0] >= sr.val));
+            }
+        }
+
+        if (expect_all_match) {
+            if (!all_match) {
+                cout << boundaries << endl;
+                cout << g_rules[name].subrules.at(start_rule) << endl;
+            }
+            assert(all_match);
+        }
+
+        if (!all_match) {
+            // split;
+            auto boundaries_1 = boundaries;
+            auto boundaries_2 = boundaries;
+
+            if (sr.op == '>') {
+                boundaries_1[index][1] = sr.val;
+                boundaries_2[index][0] = sr.val + 1;
+            } else {
+                boundaries_1[index][1] = sr.val - 1;
+                boundaries_2[index][0] = sr.val;
+            }
+            ret += doit(name, boundaries_1, start_rule, true);
+            ret += doit(name, boundaries_2, start_rule, true);
+        } else {
+            bool cond_ok = sr.always;
+            if (!cond_ok) {
+                std::function<long long(int,int)> cmp = std::less<int>();
+                switch (sr.op) {
+                case '>': {
+                    cmp = std::greater<int>();
+                    break;
+                }
+                case '<': break;
+                default: assert(false);
+                }
+                int val;
+                switch (sr.name) {
+                case 'x': val = boundaries[0][0]; break;
+                case 'm': val = boundaries[1][0]; break;
+                case 'a': val = boundaries[2][0]; break;
+                case 's': val = boundaries[3][0]; break;
+                default: assert(false);
+                }
+                cond_ok = (cmp(val, sr.val));
+            }
+
+            if (cond_ok) {
+                if (sr.dest_is_final && sr.accept) {
+                    long long local = 1;
+                    local *= (boundaries[0][1] - boundaries[0][0] + 1);
+                    local *= (boundaries[1][1] - boundaries[1][0] + 1);
+                    local *= (boundaries[2][1] - boundaries[2][0] + 1);
+                    local *= (boundaries[3][1] - boundaries[3][0] + 1);
+                    ret = local;
+                } else if (sr.dest_is_final && !sr.accept) {
+                    // nothing;
+                } else {
+                    ret = doit(sr.dest, boundaries, 0);
+                }
+            } else {
+                ret = doit(name, boundaries, start_rule + 1);
+            }
+        }
+    }
+
+    if (start_rule == 0)
+        g_cache[{name, boundaries}] = ret;
+    return ret;
+}
+
 long long g()
 {
-    return 0;
+    array<array<int, 2>, 4> start_condition;
+    for (auto& ii:start_condition) {
+        ii[0] = 1;
+        ii[1] = 4000;
+    }
+    return doit("in", start_condition, 0);
 }
 
 int main()
