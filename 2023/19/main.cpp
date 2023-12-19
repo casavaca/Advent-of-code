@@ -15,9 +15,26 @@
 #include <cstring>
 #include <cassert>
 
-#include "../template/header.hpp"
-
 using namespace std;
+
+// input with commas as space:
+// https://en.cppreference.com/w/cpp/locale/ctype_char
+struct custom_delims : ctype<char>
+{
+    custom_delims(const std::string& s) : ctype<char>(make_table(s)) {}
+    static const mask* make_table(const std::string& s)
+    {
+        static mask table[ctype<char>::table_size];
+        memcpy(table, classic_table(), table_size);
+        for (auto c:s) table[c] = ctype_base::space;
+        return &table[0];
+    }
+};
+
+static void istream_ignore(istream& is, const string& s)
+{
+    is.imbue(std::locale(is.getloc(), new custom_delims(s)));
+};
 
 long long ans1;
 long long ans2;
@@ -39,19 +56,6 @@ struct Rule {
     string ori_str;
     vector<SubRule> subrules;
 };
-
-ostream& operator<<(ostream& os, const Rule& r)
-{
-    os << "Rule name " << r.name << '\n';
-    os << "  "         << r.ori_str << '\n';
-    return os;
-}
-
-ostream& operator<<(ostream& os, const SubRule& sr)
-{
-    os << "  " << sr.always << ' ' << sr.name << ' ' << sr.op << ' ' << sr.val << ' ' << sr.dest_is_final << ' ' << sr.dest << ' ' << sr.accept << '\n';
-    return os;
-}
 
 struct Item {
     array<int,4> val; // x m a s
@@ -211,10 +215,6 @@ long long doit(string name, array<array<int, 2>, 4> boundaries, int start_rule, 
         }
 
         if (expect_all_match) {
-            if (!all_match) {
-                cout << boundaries << endl;
-                cout << g_rules[name].subrules.at(start_rule) << endl;
-            }
             assert(all_match);
         }
 
